@@ -1,0 +1,16 @@
+export type Cardinality="0,1"|"1,1"|"0,N"|"1,N";
+export const CARDINALITIES:Cardinality[]=["0,1","1,1","0,N","1,N"];
+export type DataType="integer"|"text"|"boolean"|"date"|"decimal";
+export const DATA_TYPES:DataType[]=["integer","text","boolean","date","decimal"];
+export interface Attribute{id:string;name:string;type:DataType;isIdentifier:boolean;nullable:boolean;unique:boolean}
+export interface Entity{id:string;name:string;attributes:Attribute[]}
+export interface Link{id:string;entityId:string;cardinality:Cardinality;role?:string}
+export interface Association{id:string;name:string;links:Link[];attributes:Attribute[];hideCard?:boolean;hideMax?:boolean}
+export interface Mcd{entities:Entity[];associations:Association[]}
+export type Pos={x:number;y:number};
+export interface Doc{mcd:Mcd;positions:Record<string,Pos>}
+export interface Diagnostic{severity:"error"|"warning";code:string;message:string;targetId?:string}
+export interface Column{name:string;type:DataType;nullable:boolean;unique:boolean;origin:string}
+export interface ForeignKey{columns:string[];refTable:string;refColumns:string[];reason:string}
+export interface Table{name:string;columns:Column[];primaryKey:string[];foreignKeys:ForeignKey[]}
+export interface Mld{tables:Table[];warnings:Diagnostic[];rules:string[]}
