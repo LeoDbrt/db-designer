@@ -1,7 +1,7 @@
 import {useState} from "react";import {useStore} from "./store";import {listProjects,saveProject} from "./projects";
 export default function Files({onClose}:{onClose:()=>void}){
   const s=useStore();
-  const [,bump]=useState(()=>{const c=useStore.getState();saveProject(c.projectId,c.name,{mcd:c.mcd,positions:c.positions});return 0});
+  const [,bump]=useState(()=>{const c=useStore.getState();saveProject(c.projectId,c.name,{mcd:c.mcd,positions:c.positions,extra:c.extra});return 0});
   const list=listProjects().sort((a,b)=>b.updatedAt-a.updatedAt);
   const run=(f:()=>void)=>()=>{f();bump(x=>x+1)};
   return <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>

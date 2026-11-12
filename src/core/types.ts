@@ -8,7 +8,7 @@ export interface Link{id:string;entityId:string;cardinality:Cardinality;role?:st
 export interface Association{id:string;name:string;links:Link[];attributes:Attribute[];hideCard?:boolean;hideMax?:boolean}
 export interface Mcd{entities:Entity[];associations:Association[]}
 export type Pos={x:number;y:number};
-export interface Doc{mcd:Mcd;positions:Record<string,Pos>}
+export interface Doc{mcd:Mcd;positions:Record<string,Pos>;extra?:Record<string,any>}
 export interface Diagnostic{severity:"error"|"warning";code:string;message:string;targetId?:string}
 export interface Column{name:string;type:DataType;nullable:boolean;unique:boolean;origin:string}
 export interface ForeignKey{columns:string[];refTable:string;refColumns:string[];reason:string}

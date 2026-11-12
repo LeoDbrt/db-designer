@@ -20,13 +20,13 @@ interface S extends Doc{
   addAttr(o:string):void;updAttr(o:string,a:string,p:Partial<Attribute>):void;delAttr(o:string,a:string):void;moveAttr(o:string,a:string,dir:-1|1):void;
   updLink(aid:string,lid:string,p:Partial<Link>):void;deleteEls(ids:string[]):void;setPos(id:string,p:Pos):void;
   snap():void;undo():void;redo():void;load(name:string,d:Doc):void;
-  save():void;openProject(id:string):void;newProject():void;duplicateProject(id:string):void;removeProject(id:string):void;addLink(aid:string,entityId:string):void;setAssoc(id:string,p:Partial<Association>):void;delLink(aid:string,lid:string):void;
+  save():void;openProject(id:string):void;newProject():void;duplicateProject(id:string):void;removeProject(id:string):void;addLink(aid:string,entityId:string):void;setAssoc(id:string,p:Partial<Association>):void;setExtra(k:string,v:unknown):void;delLink(aid:string,lid:string):void;
 }
 export const useStore=create<S>((set,get)=>{
   const cur=():Doc=>({mcd:get().mcd,positions:get().positions});
   const mutate=(fn:(d:Doc)=>void)=>{const prev=cur();const d=structuredClone(prev);fn(d);set({...d,past:[...get().past,prev].slice(-100),future:[]})};
   const owner=(d:Doc,id:string)=>d.mcd.entities.find(e=>e.id===id)??d.mcd.associations.find(a=>a.id===id);
-  const switchTo=(name:string,d:Doc,id:string)=>set({projectId:id,name,mcd:structuredClone(d.mcd),positions:structuredClone(d.positions),selected:[],past:[],future:[]});
+  const switchTo=(name:string,d:Doc,id:string)=>set({projectId:id,name,mcd:structuredClone(d.mcd),positions:structuredClone(d.positions),extra:structuredClone(d.extra??{}),selected:[],past:[],future:[]});
   const empty:Doc={mcd:{entities:[],associations:[]},positions:{}};
   return {...initial(),selected:[],past:[],future:[],status:"saved" as Status,
     setName:name=>set({name}),setStatus:status=>set({status}),setSelection:selected=>set({selected}),
@@ -58,13 +58,14 @@ export const useStore=create<S>((set,get)=>{
     snap:()=>set(s=>({past:[...s.past,cur()].slice(-100),future:[]})),
     undo:()=>{const {past,future}=get();const prev=past.at(-1);if(!prev)return;set({...prev,past:past.slice(0,-1),future:[cur(),...future]})},
     redo:()=>{const {past,future}=get();const nxt=future[0];if(!nxt)return;set({...nxt,past:[...past,cur()],future:future.slice(1)})},
-    save:()=>{const s=get();set({status:"saving"});saveProject(s.projectId,s.name,{mcd:s.mcd,positions:s.positions});setTimeout(()=>set({status:"saved"}),250)},
+    save:()=>{const s=get();set({status:"saving"});saveProject(s.projectId,s.name,{mcd:s.mcd,positions:s.positions,extra:s.extra});setTimeout(()=>set({status:"saved"}),250)},
     load:(name,d)=>{get().save();switchTo(name,d,uid());get().save()},
     openProject:id=>{if(id===get().projectId)return;get().save();const p=loadProject(id);if(p)switchTo(p.name,p,id)},
     newProject:()=>get().load("Nouveau projet",empty),
     duplicateProject:id=>{get().save();const p=loadProject(id);if(p)saveProject(uid(),`${p.name} (copie)`,p)},
     removeProject:id=>{deleteProject(id);if(id!==get().projectId)return;const n=listProjects()[0];const p=n?loadProject(n.id):null;
       if(n&&p)switchTo(p.name,p,n.id);else{switchTo("Nouveau projet",empty,uid());get().save()}},
+    setExtra:(k,v)=>set(s=>({extra:{...s.extra,[k]:v}})),
     setAssoc:(id,p)=>mutate(d=>{const a=d.mcd.associations.find(x=>x.id===id);if(a)Object.assign(a,p)}),
     addLink:(aid,entityId)=>mutate(d=>{d.mcd.associations.find(a=>a.id===aid)?.links.push({id:uid(),entityId,cardinality:"0,N"})}),
     delLink:(aid,lid)=>mutate(d=>{const a=d.mcd.associations.find(x=>x.id===aid);if(a)a.links=a.links.filter(l=>l.id!==lid)}),
